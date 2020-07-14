@@ -44,7 +44,7 @@ def request_started_handler(sender, environ, **kwargs):
     # user = get_current_user()
     user = None
     # get the user from http auth
-    if not user_id and environ.get("HTTP_AUTHORIZATION"):
+    if not user and environ.get("HTTP_AUTHORIZATION"):
         try:
             http_auth = environ.get("HTTP_AUTHORIZATION")
             jwt_token = (
@@ -52,9 +52,10 @@ def request_started_handler(sender, environ, **kwargs):
             )
             jwt_token_decoded = jwt.decode(jwt_token, None, None)
             user_id = jwt_token_decoded["user_id"]
-        except Exception:
-            raise
-            user_id = None
+            if user_id:
+                user = get_user_model().objects.get(id=user_id)
+        except:
+            user = None
 
     # get the user from cookies
     if not user and environ.get('HTTP_COOKIE'):
