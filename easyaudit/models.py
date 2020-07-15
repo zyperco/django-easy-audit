@@ -19,7 +19,7 @@ class CRUDEvent(models.Model):
     )
 
     event_type = models.SmallIntegerField(choices=TYPES)
-    object_id = CharField(max_length=255)  # we should try to allow other ID types
+    object_id = models.CharField(max_length=255)  # we should try to allow other ID types
     content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE, db_constraint=False)
     object_repr = models.TextField(null=True, blank=True)
     object_json_repr = models.TextField(null=True, blank=True)
