@@ -11,6 +11,6 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name="crudevent",
             name="object_id",
-            field=models.CharFiled(max_length=255),
+            field=models.CharField(max_length=255),
         ),
     ]
