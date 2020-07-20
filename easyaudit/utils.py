@@ -6,6 +6,12 @@ from django.db.models import NOT_PROVIDED, DateTimeField
 from django.utils import timezone
 
 
+def scrub_sensitive_field(name):
+    if name in getattr(settings, "DJANGO_EASY_AUDIT_SENSITIVE_FIELDS", []):
+        return True
+    return False
+
+
 def get_field_value(obj, field):
     """
     Gets the value of a given model instance field.
@@ -16,6 +22,9 @@ def get_field_value(obj, field):
     :return: The value of the field as a string.
     :rtype: str
     """
+    if scrub_sensitive_field(field.name):
+        return "***"
+
     if isinstance(field, DateTimeField):
         # DateTimeFields are timezone-aware, so we need to convert the field
         # to its naive form before we can accuratly compare them for changes.
@@ -53,8 +62,7 @@ def model_delta(old_model, new_model):
         old_value = get_field_value(old_model, field)
         new_value = get_field_value(new_model, field)
         if old_value != new_value:
-            delta[field.name] = [smart_text(old_value),
-                                 smart_text(new_value)]
+            delta[field.name] = [smart_text(old_value), smart_text(new_value)]
 
     if len(delta) == 0:
         delta = None
