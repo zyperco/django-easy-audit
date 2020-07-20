@@ -1,1 +1,1 @@
-default_app_config = 'easyaudit.apps.EasyAuditConfig'
+default_app_config = "easyaudit.apps.EasyAuditConfig"

@@ -13,16 +13,12 @@ from django.utils import timezone
 from django.utils.encoding import force_text
 from django.utils.module_loading import import_string
 
-from easyaudit.middleware.easyaudit import get_current_request, get_current_user
+from easyaudit.middleware.easyaudit import (get_current_request,
+                                            get_current_user)
 from easyaudit.models import CRUDEvent
-from easyaudit.settings import (
-    REGISTERED_CLASSES,
-    UNREGISTERED_CLASSES,
-    WATCH_MODEL_EVENTS,
-    CRUD_DIFFERENCE_CALLBACKS,
-    LOGGING_BACKEND,
-    DATABASE_ALIAS,
-)
+from easyaudit.settings import (CRUD_DIFFERENCE_CALLBACKS, DATABASE_ALIAS,
+                                LOGGING_BACKEND, REGISTERED_CLASSES,
+                                UNREGISTERED_CLASSES, WATCH_MODEL_EVENTS)
 from easyaudit.utils import model_delta, scrub_sensitive_field
 
 logger = logging.getLogger(__name__)
@@ -289,7 +285,9 @@ def m2m_changed(sender, instance, action, reverse, model, pk_set, using, **kwarg
                 # django serializers ignore extra fields.
                 tmp_repr = json.loads(object_json_repr)
 
-                m2m_rev_field = _m2m_rev_field_name(instance._meta.concrete_model, model)
+                m2m_rev_field = _m2m_rev_field_name(
+                    instance._meta.concrete_model, model
+                )
                 related_instances = getattr(instance, m2m_rev_field).all()
                 related_ids = [r.pk for r in related_instances]
 

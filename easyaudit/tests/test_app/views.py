@@ -7,7 +7,7 @@ def create_obj_view(request):
 
 
 def update_obj_view(request):
-    tm = TestModel.objects.get(pk=request.GET['id'])
-    tm.name = request.GET['id']
+    tm = TestModel.objects.get(pk=request.GET["id"])
+    tm.name = request.GET["id"]
     tm.save()
     return HttpResponse(tm.id)

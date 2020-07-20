@@ -8,13 +8,11 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('easyaudit', '0010_repr_text'),
+        ("easyaudit", "0010_repr_text"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='requestevent',
-            name='url',
-            field=models.TextField(),
+            model_name="requestevent", name="url", field=models.TextField(),
         ),
     ]

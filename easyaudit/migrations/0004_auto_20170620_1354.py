@@ -8,13 +8,12 @@ from django.db import migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('contenttypes', '0002_remove_content_type_name'),
-        ('easyaudit', '0003_auto_20170228_1505'),
+        ("contenttypes", "0002_remove_content_type_name"),
+        ("easyaudit", "0003_auto_20170228_1505"),
     ]
 
     operations = [
         migrations.AlterIndexTogether(
-            name='crudevent',
-            index_together=set([('object_id', 'content_type')]),
+            name="crudevent", index_together=set([("object_id", "content_type")]),
         ),
     ]

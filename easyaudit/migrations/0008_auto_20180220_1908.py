@@ -8,18 +8,23 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('easyaudit', '0007_auto_20180105_0838'),
+        ("easyaudit", "0007_auto_20180105_0838"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='crudevent',
-            name='changed_fields',
+            model_name="crudevent",
+            name="changed_fields",
             field=models.TextField(blank=True, null=True),
         ),
         migrations.AlterField(
-            model_name='crudevent',
-            name='user_pk_as_string',
-            field=models.CharField(blank=True, help_text='String version of the user pk', max_length=255, null=True),
+            model_name="crudevent",
+            name="user_pk_as_string",
+            field=models.CharField(
+                blank=True,
+                help_text="String version of the user pk",
+                max_length=255,
+                null=True,
+            ),
         ),
     ]

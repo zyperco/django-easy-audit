@@ -2,7 +2,7 @@ from django.db import models
 
 
 class TestModel(models.Model):
-    name = models.CharField(max_length=50, default='test data')
+    name = models.CharField(max_length=50, default="test data")
 
 
 class TestForeignKey(models.Model):
