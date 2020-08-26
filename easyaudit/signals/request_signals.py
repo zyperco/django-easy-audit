@@ -1,3 +1,5 @@
+import jwt
+
 from django.contrib.auth import get_user_model
 from django.contrib.sessions.models import Session
 from django.core.signals import request_started
@@ -62,6 +64,21 @@ def request_started_handler(sender, **kwargs):
     # try and get the user from the request; commented for now, may have a bug in this flow.
     # user = get_current_user()
     user = None
+
+    # get the user from http auth
+    if not user and environ.get("HTTP_AUTHORIZATION"):
+        try:
+            http_auth = environ.get("HTTP_AUTHORIZATION")
+            jwt_token = (
+                http_auth.split(" ")[1] if http_auth.startswith("Bearer") else http_auth
+            )
+            jwt_token_decoded = jwt.decode(jwt_token, None, None)
+            user_id = jwt_token_decoded["user_id"]
+            if user_id:
+                user = get_user_model().objects.get(id=user_id)
+        except:
+            user = None
+
     # get the user from cookies
     if not user and cookie_string:
         cookie = SimpleCookie()
