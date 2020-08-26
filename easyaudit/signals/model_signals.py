@@ -6,6 +6,7 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AnonymousUser
 from django.contrib.contenttypes.models import ContentType
 from django.core import serializers
+from django.core.exceptions import ObjectDoesNotExist
 from django.db import transaction
 from django.db.models import signals
 from django.utils import timezone
@@ -18,7 +19,7 @@ from easyaudit.models import CRUDEvent
 from easyaudit.settings import REGISTERED_CLASSES, UNREGISTERED_CLASSES, \
     WATCH_MODEL_EVENTS, CRUD_DIFFERENCE_CALLBACKS, LOGGING_BACKEND, \
     DATABASE_ALIAS
-from easyaudit.utils import model_delta
+from easyaudit.utils import model_delta, scrub_sensitive_field
 
 logger = logging.getLogger(__name__)
 audit_logger = import_string(LOGGING_BACKEND)()
@@ -45,6 +46,19 @@ def should_audit(instance):
     return True
 
 
+def scrub_sensitive_fields_object_json_repr(obj):
+    try:
+        obj_ = json.loads(obj)
+
+        for i, o in enumerate(obj_):
+            for key in o["fields"].keys():
+                if scrub_sensitive_field(key):
+                    obj_[i]["fields"][key] = "***"
+        return json.dumps(obj_)
+    except Exception:
+        return obj
+
+
 # signals
 def pre_save(sender, instance, raw, using, update_fields, **kwargs):
     """https://docs.djangoproject.com/es/1.10/ref/signals/#post-save"""
@@ -58,6 +72,9 @@ def pre_save(sender, instance, raw, using, update_fields, **kwargs):
                 return False
             try:
                 object_json_repr = serializers.serialize("json", [instance])
+                object_json_repr = scrub_sensitive_fields_object_json_repr(
+                    object_json_repr
+                )
             except Exception:
                 # We need a better way for this to work. ManyToMany will fail on pre_save on create
                 return None
@@ -69,12 +86,15 @@ def pre_save(sender, instance, raw, using, update_fields, **kwargs):
 
             # created or updated?
             if not created:
-                old_model = sender.objects.get(pk=instance.pk)
-                delta = model_delta(old_model, instance)
-                if not delta and getattr(settings, "DJANGO_EASY_AUDIT_CRUD_EVENT_NO_CHANGED_FIELDS_SKIP", False):
-                    return False
-                changed_fields = json.dumps(delta)
-                event_type = CRUDEvent.UPDATE
+                try:
+                    old_model = sender.objects.get(pk=instance.pk)
+                    delta = model_delta(old_model, instance)
+                    if not delta and getattr(settings, "DJANGO_EASY_AUDIT_CRUD_EVENT_NO_CHANGED_FIELDS_SKIP", False):
+                        return False
+                    changed_fields = json.dumps(delta)
+                    event_type = CRUDEvent.UPDATE
+                except ObjectDoesNotExist:
+                    created = True
 
             # user
             try:
@@ -137,6 +157,7 @@ def post_save(sender, instance, created, raw, using, update_fields, **kwargs):
             if not should_audit(instance):
                 return False
             object_json_repr = serializers.serialize("json", [instance])
+            object_json_repr = scrub_sensitive_fields_object_json_repr(object_json_repr)
 
             # created or updated?
             if created:
@@ -220,6 +241,7 @@ def m2m_changed(sender, instance, action, reverse, model, pk_set, using, **kwarg
                 return False
 
             object_json_repr = serializers.serialize("json", [instance])
+            object_json_repr = scrub_sensitive_fields_object_json_repr(object_json_repr)
 
             if reverse:
                 event_type = CRUDEvent.M2M_CHANGE_REV
@@ -287,6 +309,7 @@ def post_delete(sender, instance, using, **kwargs):
                 return False
 
             object_json_repr = serializers.serialize("json", [instance])
+            object_json_repr = scrub_sensitive_fields_object_json_repr(object_json_repr)
 
             # user
             try:
